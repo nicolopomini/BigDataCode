@@ -15,7 +15,7 @@ class TreePattern:
         self.field: str = field
         self.value: str = value
         self.parent: TreePattern = None
-        self.children: TreePattern = []
+        self.children: List[TreePattern] = []
 
     def add_child(self, child) -> None:
         self.children.append(child)
@@ -37,11 +37,11 @@ class TreePattern:
             child.print_tree(tabs+1)
 
     def get_nodes_list(self) -> []:
-        nodes_list: TreePattern = []
-        nodes_list.append(self)
+        nodes_list: List[TreePattern] = [self]
         for child in self.children:
             nodes_list.extend(child.get_nodes_list())
         return nodes_list
+
 
 class Pattern:
     @staticmethod

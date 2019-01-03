@@ -1,10 +1,13 @@
 from __future__ import absolute_import
 
-from tree_for_generator import TreePattern
-from tree_for_generator import Pattern
+from typing import List
+
+from tree import TreePattern
+from tree import Pattern
 from values import ValueGenerator
 import random
 import copy
+
 
 class Gen:
     def __init__(self, total_trees: int, total_patterns: int, min_pattern_length: int, max_pattern_length: int) -> None:
@@ -22,7 +25,7 @@ class Gen:
         if min_pattern_length > max_pattern_length:
             raise ValueError("The minimum number of nodes in each pattern must be "
                              "smaller than the maximum number of nodes in each pattern. "
-                             "Given min_pattern_length %d and max_pattern_length %d" % min_pattern_length, max_pattern_length)
+                             "Given min_pattern_length %d and max_pattern_length %d" % (min_pattern_length, max_pattern_length))
         self.total_patterns: int = total_patterns
         self.total_trees: int = total_trees
         self.min_pattern_nodes: int = min_pattern_length
@@ -32,19 +35,19 @@ class Gen:
         # Patterns are generated
         fields = 100
         vals = 100
-        pattern_list: TreePattern = []
+        pattern_list: List[TreePattern] = []
         for _ in range(self.total_patterns):
             attributes = ValueGenerator.generate_pattern_values(fields, vals)
-            pattern_list.append(Pattern.generate_pattern(random.randint(self.min_pattern_nodes, self.max_pattern_nodes), list(attributes.keys()), attributes))
+            pattern_list.append(Pattern.generate_pattern(random.randint(self.min_pattern_nodes, self.max_pattern_nodes), [field for field in attributes], attributes))
         # Trees are generated
-        tree_list: TreePattern = []
+        tree_list: List[TreePattern] = []
         for _ in range(self.total_trees):
-            patterns_in_tree = random.randint(2,2)
+            patterns_in_tree = random.randint(2, 2)
             chosen_patterns = []
             for _ in range(patterns_in_tree):
                 chosen = pattern_list[random.randint(0, len(pattern_list) - 1)]
                 chosen_patterns.append(chosen)
-            attributes = ValueGenerator.generate_values(fields, vals) # new fields and values for the randomly generated nodes
+            attributes = ValueGenerator.generate_values(fields, vals)   # new fields and values for the randomly generated nodes
             fields_list = list(attributes.keys())
             random_nodes = []
             # Random nodes generation
