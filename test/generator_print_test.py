@@ -5,7 +5,7 @@ from tree import Pattern
 from values import ValueGenerator
 
 
-g = Gen(100, 20, 3, 10)
+g = Gen(200, 30, 1, 10)
 treelist = g.generate_data()
 for tree in treelist:
     tree.print_tree()

@@ -7,6 +7,7 @@ from tree import Pattern
 from values import ValueGenerator
 import random
 import copy
+import math
 
 
 class Gen:
@@ -39,19 +40,27 @@ class Gen:
         for _ in range(self.total_patterns):
             attributes = ValueGenerator.generate_pattern_values(fields, vals)
             pattern_list.append(Pattern.generate_pattern(random.randint(self.min_pattern_nodes, self.max_pattern_nodes), [field for field in attributes], attributes))
+        # Tree indexes for patterns are generated
+        pattern_tree_indexes = {}
+        for pattern in pattern_list:
+            tree_indexes = []
+            min_frequency = (self.total_trees / 100) * 20;
+            for _ in range(math.floor(self.total_trees - (((len(pattern.get_nodes_list()) - 1) - self.min_pattern_nodes) * ((self.total_trees - min_frequency) / (self.max_pattern_nodes - self.min_pattern_nodes))))):
+                tree_indexes.append(random.randint(0, self.total_trees - 1))
+            pattern_tree_indexes[pattern] = tree_indexes
+            print("indexes: " + str(len(tree_indexes)) + " pattern: " + str(len(pattern.get_nodes_list())-1))
         # Trees are generated
         tree_list: List[TreePattern] = []
-        for _ in range(self.total_trees):
-            patterns_in_tree = random.randint(2, 2)
+        for index in range(self.total_trees):
             chosen_patterns = []
-            for _ in range(patterns_in_tree):
-                chosen = pattern_list[random.randint(0, len(pattern_list) - 1)]
-                chosen_patterns.append(chosen)
+            for pattern in pattern_list:
+                if index in pattern_tree_indexes[pattern]:
+                    chosen_patterns.append(pattern)
             attributes = ValueGenerator.generate_values(fields, vals)   # new fields and values for the randomly generated nodes
             fields_list = list(attributes.keys())
             random_nodes = []
             # Random nodes generation
-            while len(random_nodes) < (self.max_pattern_nodes + self.min_pattern_nodes) * patterns_in_tree:
+            while len(random_nodes) < (self.max_pattern_nodes + self.min_pattern_nodes) + (self.max_pattern_nodes + self.min_pattern_nodes) * len(chosen_patterns):
                 field_name = fields_list[random.randint(0, len(fields_list) - 1)]
                 field_value = attributes[field_name][random.randint(0, len(attributes[field_name]) - 1)]
                 node = TreePattern(field_name, field_value)
@@ -59,27 +68,29 @@ class Gen:
                     random_nodes.append(node)
             # Randomly append orphan nodes and patterns
             random_nodes.extend(chosen_patterns)
-            root = copy.deepcopy(random_nodes[random.randint(0, len(random_nodes) - 1)])
+            selected_root = random_nodes[random.randint(0, len(random_nodes) - 1)]
+            root = copy.deepcopy(selected_root)
             current_tree = []
-            if root in chosen_patterns:
+            if selected_root in chosen_patterns:
                 current_tree.extend(root.get_nodes_list())
             else:
                 current_tree.append(root)
-            random_nodes.remove(root)
+            random_nodes.remove(selected_root)
             while len(random_nodes) > 0:
-                node_to_append = copy.deepcopy(random_nodes[random.randint(0, len(random_nodes) - 1)])
+                selected_node_to_append = random_nodes[random.randint(0, len(random_nodes) - 1)]
+                node_to_append = copy.deepcopy(selected_node_to_append)
                 chosen_parent = current_tree[random.randint(0, len(current_tree) - 1)]
                 if "_____" not in chosen_parent.field:
                     chosen_parent.add_child(node_to_append)
-                    if node_to_append in chosen_patterns:
+                    if selected_node_to_append in chosen_patterns:
                         current_tree.extend(node_to_append.get_nodes_list())
                     else:
                         current_tree.append(node_to_append)
-                    random_nodes.remove(node_to_append)
+                    random_nodes.remove(selected_node_to_append)
                 else:
-                    if node_to_append not in chosen_patterns:
+                    if selected_node_to_append not in chosen_patterns:
                         chosen_parent.add_child(node_to_append)
                         current_tree.append(node_to_append)
-                        random_nodes.remove(node_to_append)
+                        random_nodes.remove(selected_node_to_append)
             tree_list.append(root)
         return tree_list

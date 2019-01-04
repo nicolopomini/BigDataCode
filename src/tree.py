@@ -24,11 +24,6 @@ class TreePattern:
     def __repr__(self) -> str:
         return "Node('%s' = %s)" % (self.field, self.value)
 
-    def __eq__(self, o: object) -> bool:
-        if not isinstance(o, TreePattern):
-            return False
-        return self.field == o.field and self.value == o.value
-
     def print_tree(self, tabs=0) -> None:
         print(self.__repr__())
         for child in self.children:
