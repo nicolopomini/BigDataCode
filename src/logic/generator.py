@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from typing import List, Dict
 
-from models.tree import TreePattern
+from models.tree import TreePattern, TransactionTree
 from logic.values import ValueGenerator
 import random
 import copy
@@ -88,6 +88,21 @@ class TransactionGenerator:
         self.threshold = threshold
         self.print_pattern = print_pattern
 
+    def tree_pattern_to_transaction_tree(self, original: TreePattern, data: Dict[str, List[str]], parent: TransactionTree = None) -> TransactionTree:
+        rid = ValueGenerator.random_string()
+        attributes = {"rid": rid, "parent": "" if parent is None else parent.fields["rid"]}
+        # add attributes of the pattern
+        for field in original.fields:
+            attributes[field] = original.fields[field]
+        for field in data:
+            if field not in attributes:
+                attributes[field] = data[field][random.randint(0, len(data[field]) - 1)]
+        node = TransactionTree(attributes)
+        for tree in original.children:
+            node.add_child(self.tree_pattern_to_transaction_tree(tree, data, node))
+        return node
+
+
     @staticmethod
     def _print_patterns(patterns: List[TreePattern], appearances: List[List[int]]) -> None:
         print("GENERATION DETAILS:\n")
@@ -121,7 +136,10 @@ class TransactionGenerator:
         if self.print_pattern:
             TransactionGenerator._print_patterns(pattern_list, pattern_transactions)
 
-        # TODO: change TreePattern nodes into TransactionTree nodes
+        # change TreePattern nodes into TransactionTree nodes
+        pattern_for_transaction = []
+
+        # TODO: change TreePattern nodes into TransactionTree nodes using tree_pattern_to_transaction_tree
         # TODO: test
         # TODO: read arguments in the main script and use them
         # TODO: update README with instructions
