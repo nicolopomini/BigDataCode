@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from unittest import TestCase
 
-from src.values import ValueGenerator
+from logic.values import ValueGenerator
 
 
 class TestValueGenerator(TestCase):
