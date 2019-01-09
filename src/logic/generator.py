@@ -90,7 +90,7 @@ class TransactionGenerator:
 
     def tree_pattern_to_transaction_tree(self, original: TreePattern, data: Dict[str, List[str]], parent: TransactionTree = None) -> TransactionTree:
         rid = ValueGenerator.random_string()
-        attributes = {"rid": rid, "parent": "" if parent is None else parent.fields["rid"]}
+        attributes = {"rid": rid}
         # add attributes of the pattern
         for field in original.fields:
             attributes[field] = original.fields[field]
@@ -138,40 +138,54 @@ class TransactionGenerator:
 
         # change TreePattern nodes into TransactionTree nodes
         pattern_for_transaction = []
-
-        # TODO: change TreePattern nodes into TransactionTree nodes using tree_pattern_to_transaction_tree
-        # TODO: test
-        # TODO: read arguments in the main script and use them
-        # TODO: update README with instructions
-
-        return None
-        """
+        for name in [field for field in attributes]:    # temporary solution to distinguish random attributes from pattern attributes
+            new_field = name.replace("_____","")
+            attributes[new_field] = []
+            for value in attributes[name]:
+                attributes[new_field].append(value.replace("_____",""))
+            attributes.pop(name, None)
+        max_pattern_nodes = 0
+        min_pattern_nodes = len(pattern_list[0].get_nodes_list())
+        for tree_pattern in pattern_list:
+            pattern_length = len(tree_pattern.get_nodes_list())
+            pattern_for_transaction.append(self.tree_pattern_to_transaction_tree(tree_pattern, attributes))
+            if pattern_length > max_pattern_nodes:
+                max_pattern_nodes = pattern_length
+            else:
+                if pattern_length < min_pattern_nodes:
+                    min_pattern_nodes = pattern_length
         pattern_tree_indexes = {}
-        for pattern in pattern_list:
+        for pattern in pattern_for_transaction:
             tree_indexes = []
             min_frequency = int(self.total_trees * TransactionGenerator.MIN_FREQ_PERC)
-            for _ in range(self.total_trees - (((len(pattern.get_nodes_list()) - 1) - self.min_pattern_nodes) * ((self.total_trees - min_frequency) / (self.max_pattern_nodes - self.min_pattern_nodes)))):
+            for _ in range(int(self.total_trees - (((len(pattern.get_nodes_list())) - min_pattern_nodes) * (
+                    (self.total_trees - min_frequency) / (max_pattern_nodes - min_pattern_nodes))))):
                 tree_indexes.append(random.randint(0, self.total_trees - 1))
             pattern_tree_indexes[pattern] = tree_indexes
-            print("indexes: " + str(len(tree_indexes)) + " pattern: " + str(len(pattern.get_nodes_list())-1))
+            print("indexes: " + str(len(tree_indexes)) + " pattern: " + str(len(pattern.get_nodes_list()) - 1))
+
         # Trees are generated
-        tree_list: List[TreePattern] = []
+        tree_list: List[TransactionTree] = []
         for index in range(self.total_trees):
             chosen_patterns = []
-            for pattern in pattern_list:
+            transaction_id = ValueGenerator.random_string()
+            for pattern in pattern_for_transaction:
                 if index in pattern_tree_indexes[pattern]:
                     chosen_patterns.append(pattern)
-            attributes = ValueGenerator.generate_values(fields, vals)   # new fields and values for the randomly generated nodes
-            fields_list = list(attributes.keys())
+            for pattern in chosen_patterns:
+                for node in pattern.get_nodes_list():
+                    node.fields["tid"] = transaction_id
             random_nodes = []
             # Random nodes generation
-            while len(random_nodes) < (self.max_pattern_nodes + self.min_pattern_nodes) + (self.max_pattern_nodes + self.min_pattern_nodes) * len(chosen_patterns):
-                field_name = fields_list[random.randint(0, len(fields_list) - 1)]
-                field_value = attributes[field_name][random.randint(0, len(attributes[field_name]) - 1)]
-                node = TreePattern(field_name, field_value)
-                if node not in random_nodes:  # quick fix to force nodes to be different either in field or value
-                    random_nodes.append(node)
-            # Randomly append orphan nodes and patterns
+            fields_list = [field for field in attributes]
+            for _ in range(self.avg_pattern_length + self.avg_pattern_length * len(chosen_patterns)):
+                rid = ValueGenerator.random_string()
+                fields_for_record: Dict[str, str] = {"tid": transaction_id, "rid": rid, "parent": None}
+                for _ in range(self.fields - 3):
+                    field_name = fields_list[random.randint(0, len(fields_list) - 1)]
+                    field_value = attributes[field_name][random.randint(0, len(attributes[field_name]) - 1)]
+                    fields_for_record[field_name] = field_value
+                random_nodes.append(TransactionTree(fields_for_record))
             random_nodes.extend(chosen_patterns)
             selected_root = random_nodes[random.randint(0, len(random_nodes) - 1)]
             root = copy.deepcopy(selected_root)
@@ -185,18 +199,16 @@ class TransactionGenerator:
                 selected_node_to_append = random_nodes[random.randint(0, len(random_nodes) - 1)]
                 node_to_append = copy.deepcopy(selected_node_to_append)
                 chosen_parent = current_tree[random.randint(0, len(current_tree) - 1)]
-                if "_____" not in chosen_parent.field:
-                    chosen_parent.add_child(node_to_append)
-                    if selected_node_to_append in chosen_patterns:
-                        current_tree.extend(node_to_append.get_nodes_list())
-                    else:
-                        current_tree.append(node_to_append)
-                    random_nodes.remove(selected_node_to_append)
+                chosen_parent.add_child(node_to_append)
+                if selected_node_to_append in chosen_patterns:
+                    current_tree.extend(node_to_append.get_nodes_list())
                 else:
-                    if selected_node_to_append not in chosen_patterns:
-                        chosen_parent.add_child(node_to_append)
-                        current_tree.append(node_to_append)
-                        random_nodes.remove(selected_node_to_append)
+                    current_tree.append(node_to_append)
+                random_nodes.remove(selected_node_to_append)
             tree_list.append(root)
+
+        # TODO: test
+        # TODO: read arguments in the main script and use them
+        # TODO: update README with instructions
+
         return tree_list
-        """

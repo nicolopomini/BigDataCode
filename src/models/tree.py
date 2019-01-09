@@ -57,11 +57,38 @@ class TreePattern:
 class TransactionTree:
     def __init__(self, fields: Dict[str, str]) -> None:
         self.fields = fields
-        self.parent: TransactionTree = None
         self.children: List[TransactionTree] = []
 
     def add_child(self, child):
         if not isinstance(child, TransactionTree):
             raise ValueError("Child must be of type 'TransactionTree'")
         self.children.append(child)
-        child.parent = self
+        child.fields["parent"] = self.fields["rid"]
+
+    def print_tree(self, tabs: int = 0) -> None:
+        print(self.__repr__())
+        for child in self.children:
+            for _ in range(tabs+1):
+                print("\t", end="")
+            child.print_tree(tabs + 1)
+
+    def get_nodes_list(self) -> []:
+        nodes_list: List[TreePattern] = [self]
+        for child in self.children:
+            nodes_list.extend(child.get_nodes_list())
+        return nodes_list
+
+    def __repr__(self) -> str:
+        length = len(self.fields)
+        i = 1
+        s = "Node("
+        if length == 0:
+            s += "<Anything>"
+        else:
+            for f in self.fields:
+                s += "'%s' = %s" % (f, self.fields[f])
+                if i < length:
+                    s += ", "
+                i += 1
+        s += ")"
+        return s
