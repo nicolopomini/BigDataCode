@@ -2,6 +2,10 @@ from __future__ import absolute_import
 
 from logic.generator import TransactionGenerator
 
+
+# TODO: test
+# TODO: read arguments in the main script and use them
+# TODO: update README with instructions
 print("Hello")
 transactions = 20
 patterns = 4

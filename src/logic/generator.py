@@ -28,12 +28,14 @@ class PatternGenerator:
         nodes = []
         while len(nodes) < length + 1:
             # record in the pattern with multiple fields
-            number_of_fields = random.randint(1, max_fields_for_record)
+            number_of_fields = random.randint(1, min(max_fields_for_record, len(fields)))
             fields_for_record: Dict[str, str] = {}
+            fields_name = [f for f in fields]
             for _ in range(number_of_fields):
-                field_name = fields[random.randint(0, len(fields) - 1)]
+                field_name = fields_name[random.randint(0, len(fields_name) - 1)]
                 field_value = values[field_name][random.randint(0, len(values[field_name]) - 1)]
                 fields_for_record[field_name] = field_value
+                fields_name.remove(field_name)
             node = TreePattern(fields_for_record)
             if node not in nodes:  # quick fix to force nodes to be different either in field or value
                 nodes.append(node)
@@ -56,8 +58,6 @@ class PatternGenerator:
 
 
 class TransactionGenerator:
-    MIN_FREQ_PERC = 0.2
-    TRANSACTION_PATTERN_PERC = 0.3
 
     def __init__(self, total_trees: int, total_patterns: int, avg_pattern_length: float, fields: int, values_for_field: int, threshold: int, print_pattern: bool = False) -> None:
         """
@@ -87,79 +87,57 @@ class TransactionGenerator:
         self.values_for_field = values_for_field
         self.threshold = threshold
         self.print_pattern = print_pattern
+        self.attributes = ValueGenerator.generate_values(self.fields - 3, self.values_for_field)    # exclude rid, tid and parent
 
-    def tree_pattern_to_transaction_tree(self, original: TreePattern, data: Dict[str, List[str]], parent: TransactionTree = None) -> TransactionTree:
+    def tree_pattern_to_transaction_tree(self, original: TreePattern, parent: TransactionTree = None) -> TransactionTree:
         rid = ValueGenerator.random_string()
         attributes = {"rid": rid}
         # add attributes of the pattern
         for field in original.fields:
             attributes[field] = original.fields[field]
-        for field in data:
+        for field in self.attributes:
             if field not in attributes:
-                attributes[field] = data[field][random.randint(0, len(data[field]) - 1)]
-        node = TransactionTree(attributes)
+                attributes[field] = self.attributes[field][random.randint(0, len(self.attributes[field]) - 1)]
+        node = TransactionTree(attributes, rid)
+        node.parent = parent
+        node.fields["parent"] = "" if parent is None else parent.rid
         for tree in original.children:
-            node.add_child(self.tree_pattern_to_transaction_tree(tree, data, node))
+            node.add_child(self.tree_pattern_to_transaction_tree(tree, node))
         return node
 
-
     @staticmethod
-    def _print_patterns(patterns: List[TreePattern], appearances: List[List[int]]) -> None:
+    def _print_patterns(patterns: List[TreePattern]) -> None:
         print("GENERATION DETAILS:\n")
         print("Generated patterns: %d\n" % len(patterns))
         for i in range(len(patterns)):
             patterns[i].print_tree()
-            print("Appeares %d times" % len(appearances[i]))
 
-    def generate_data(self) -> List[Dict[str, str]]:
+    def generate_data(self) -> List[TransactionTree]:
         # Patterns are generated
         pattern_list: List[TreePattern] = []
-        attributes = ValueGenerator.generate_pattern_values(self.fields, self.values_for_field)     # global list of attributes
-        fields = [field for field in attributes]
-        len_min = 1000
-        len_max = 0
+        fields = [field for field in self.attributes]
+        pattern_min_length = 1000
+        pattern_max_length = 0
         for _ in range(self.total_patterns):
             pattern_length = int(max(1, np.random.poisson(self.avg_pattern_length)))
-            if pattern_length < len_min:
-                len_min = pattern_length
-            if pattern_length > len_max:
-                len_max = pattern_length
-            pattern_list.append(PatternGenerator.generate_pattern(pattern_length, fields, attributes, self.fields - 3))
-        pattern_transactions = []   # pattern i => list of transactions it will appear on
-        for _ in range(len(pattern_list)):
-            p_transactions = []
-            number_of_appearences: int = 10     #TODO: change this value (create a function depending on length)
-            for _ in range(number_of_appearences):
-                p_transactions.append(random.randint(0, self.total_trees - 1))
-            pattern_transactions.append(p_transactions)
+            if pattern_length < pattern_min_length:
+                pattern_min_length = pattern_length
+            if pattern_length > pattern_max_length:
+                pattern_max_length = pattern_length
+            pattern_list.append(PatternGenerator.generate_pattern(pattern_length, fields, self.attributes, self.fields - 3))
         # if print flag is set, print details
         if self.print_pattern:
-            TransactionGenerator._print_patterns(pattern_list, pattern_transactions)
+            TransactionGenerator._print_patterns(pattern_list)
 
         # change TreePattern nodes into TransactionTree nodes
-        pattern_for_transaction = []
-        for name in [field for field in attributes]:    # temporary solution to distinguish random attributes from pattern attributes
-            new_field = name.replace("_____","")
-            attributes[new_field] = []
-            for value in attributes[name]:
-                attributes[new_field].append(value.replace("_____",""))
-            attributes.pop(name, None)
-        max_pattern_nodes = 0
-        min_pattern_nodes = len(pattern_list[0].get_nodes_list())
-        for tree_pattern in pattern_list:
-            pattern_length = len(tree_pattern.get_nodes_list())
-            pattern_for_transaction.append(self.tree_pattern_to_transaction_tree(tree_pattern, attributes))
-            if pattern_length > max_pattern_nodes:
-                max_pattern_nodes = pattern_length
-            else:
-                if pattern_length < min_pattern_nodes:
-                    min_pattern_nodes = pattern_length
+        pattern_for_transaction: List[TransactionTree] = []
+        for pattern in pattern_list:
+            pattern_for_transaction.append(self.tree_pattern_to_transaction_tree(pattern))
         pattern_tree_indexes = {}
         for pattern in pattern_for_transaction:
             tree_indexes = []
-            min_frequency = int(self.total_trees * TransactionGenerator.MIN_FREQ_PERC)
-            for _ in range(int(self.total_trees - (((len(pattern.get_nodes_list())) - min_pattern_nodes) * (
-                    (self.total_trees - min_frequency) / (max_pattern_nodes - min_pattern_nodes))))):
+            for _ in range(int(self.total_trees - (((len(pattern.get_nodes_list())) - pattern_min_length - 1) * (
+                    (self.total_trees - self.threshold) / (pattern_max_length - pattern_min_length))))):
                 tree_indexes.append(random.randint(0, self.total_trees - 1))
             pattern_tree_indexes[pattern] = tree_indexes
             print("indexes: " + str(len(tree_indexes)) + " pattern: " + str(len(pattern.get_nodes_list()) - 1))
@@ -175,21 +153,19 @@ class TransactionGenerator:
             for pattern in chosen_patterns:
                 for node in pattern.get_nodes_list():
                     node.fields["tid"] = transaction_id
-            random_nodes = []
+            random_nodes: List[TransactionTree] = []
             # Random nodes generation
-            fields_list = [field for field in attributes]
-            for _ in range(self.avg_pattern_length + self.avg_pattern_length * len(chosen_patterns)):
+            for _ in range(1 + int(self.avg_pattern_length + self.avg_pattern_length * len(chosen_patterns))):
                 rid = ValueGenerator.random_string()
                 fields_for_record: Dict[str, str] = {"tid": transaction_id, "rid": rid, "parent": None}
-                for _ in range(self.fields - 3):
-                    field_name = fields_list[random.randint(0, len(fields_list) - 1)]
-                    field_value = attributes[field_name][random.randint(0, len(attributes[field_name]) - 1)]
-                    fields_for_record[field_name] = field_value
-                random_nodes.append(TransactionTree(fields_for_record))
+                for field in self.attributes:
+                    field_value = self.attributes[field][random.randint(0, len(self.attributes[field]) - 1)]
+                    fields_for_record[field] = field_value
+                random_nodes.append(TransactionTree(fields_for_record, rid))
             random_nodes.extend(chosen_patterns)
             selected_root = random_nodes[random.randint(0, len(random_nodes) - 1)]
             root = copy.deepcopy(selected_root)
-            current_tree = []
+            current_tree: List[TransactionTree] = []
             if selected_root in chosen_patterns:
                 current_tree.extend(root.get_nodes_list())
             else:
@@ -200,15 +176,11 @@ class TransactionGenerator:
                 node_to_append = copy.deepcopy(selected_node_to_append)
                 chosen_parent = current_tree[random.randint(0, len(current_tree) - 1)]
                 chosen_parent.add_child(node_to_append)
+                node_to_append.fields["parent"] = chosen_parent.rid
                 if selected_node_to_append in chosen_patterns:
                     current_tree.extend(node_to_append.get_nodes_list())
                 else:
                     current_tree.append(node_to_append)
                 random_nodes.remove(selected_node_to_append)
             tree_list.append(root)
-
-        # TODO: test
-        # TODO: read arguments in the main script and use them
-        # TODO: update README with instructions
-
         return tree_list

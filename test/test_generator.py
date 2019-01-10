@@ -1,28 +1,30 @@
 from __future__ import absolute_import
 
+import random
 from unittest import TestCase
 
-from logic.generator import TransactionGenerator
+from logic.generator import TransactionGenerator, PatternGenerator
+from logic.values import ValueGenerator
 
 
 class TestGenerator(TestCase):
     def test_tree_count(self):
         tree_count = 100
         pattern_count = 20
-        min_pattern_length = 1
-        max_pattern_length = 10
-        g = TransactionGenerator(tree_count, pattern_count, min_pattern_length, max_pattern_length)
-        treelist = g.generate_data()
-        self.assertEqual(tree_count, len(treelist))
+        g = TransactionGenerator(tree_count, pattern_count, 5, 10, 100, 3)
+        tree_list = g.generate_data()
+        self.assertEqual(len(tree_list), tree_count)
 
-    def test_tree_length(self):
-        tree_count = 100
-        pattern_count = 20
-        min_pattern_length = 1
-        max_pattern_length = 10
-        expected_max_length = ((min_pattern_length + max_pattern_length) + (min_pattern_length + max_pattern_length) * pattern_count) + (pattern_count * max_pattern_length)
-        expected_min_length = (min_pattern_length + max_pattern_length)
-        g = TransactionGenerator(tree_count, pattern_count, min_pattern_length, max_pattern_length)
-        treelist = g.generate_data()
-        for root in treelist:
-            self.assertTrue(expected_min_length <= len(root.get_nodes_list()) <= expected_max_length)
+    def test_translation(self):
+        number_of_fields = 10
+        generator = TransactionGenerator(15, 15, 4, number_of_fields, 100, 1)
+        patterns = []
+        for _ in range(10 + random.randint(0, 90)):
+            patterns.append(PatternGenerator.generate_pattern(2 + random.randint(0, 5), [f for f in generator.attributes], generator.attributes, number_of_fields))
+        nodes = []
+        for pattern in patterns:
+            nodes.append(generator.tree_pattern_to_transaction_tree(pattern))
+        for node in nodes:
+            self.assertEqual(len(node.fields), number_of_fields - 1)    # tid excluded
+            self.assertTrue("rid" in node.fields)
+            self.assertTrue("parent" in node.fields)

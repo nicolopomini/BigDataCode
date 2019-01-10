@@ -55,9 +55,11 @@ class TreePattern:
 
 
 class TransactionTree:
-    def __init__(self, fields: Dict[str, str]) -> None:
+    def __init__(self, fields: Dict[str, str], rid: str) -> None:
+        self.rid = rid
         self.fields = fields
         self.children: List[TransactionTree] = []
+        self.parent = None
 
     def add_child(self, child):
         if not isinstance(child, TransactionTree):
@@ -92,3 +94,11 @@ class TransactionTree:
                 i += 1
         s += ")"
         return s
+
+    def __hash__(self) -> int:
+        return hash(self.rid)
+
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, TransactionTree):
+            return False
+        return self.fields == o.fields
