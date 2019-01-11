@@ -59,14 +59,14 @@ class PatternGenerator:
 
 class TransactionGenerator:
 
-    def __init__(self, total_trees: int, total_patterns: int, avg_pattern_length: float, fields: int, values_for_field: int, threshold: int, print_pattern: bool = False) -> None:
+    def __init__(self, total_trees: int, total_patterns: int, avg_pattern_length: float, fields: int, values_per_field: int, threshold: int, print_pattern: bool = False) -> None:
         """
         Create a node that is part of a pattern
         :param total_trees: the total number of trees that will be generated
         :param total_patterns: the total number of patterns that will be used
         :param avg_pattern_length: the average number of edges a pattern can have
         :param fields: number of fields each record has. It has to be at least 4
-        :param values_for_field: number of values each field can assume
+        :param values_per_field: number of values each field can assume
         :param threshold: number of times a pattern has to appear to be a pattern
         :param print_pattern: if true, the generated pattern are printed
         """
@@ -76,7 +76,7 @@ class TransactionGenerator:
             raise ValueError("There must be at least 2 nodes in a pattern. Given %d" % avg_pattern_length)
         if fields < 4:
             raise ValueError("The number of filed must be at least 4, given %d" % fields)
-        if values_for_field < 1:
+        if values_per_field < 1:
             raise ValueError("Each field must assume a value.")
         if threshold < 1:
             raise ValueError("A pattern must appear at least once. Given %d" % threshold)
@@ -84,7 +84,7 @@ class TransactionGenerator:
         self.total_trees: int = total_trees
         self.avg_pattern_length = avg_pattern_length
         self.fields = fields
-        self.values_for_field = values_for_field
+        self.values_for_field = values_per_field
         self.threshold = threshold
         self.print_pattern = print_pattern
         self.attributes = ValueGenerator.generate_values(self.fields - 3, self.values_for_field)    # exclude rid, tid and parent
@@ -112,7 +112,7 @@ class TransactionGenerator:
         for i in range(len(patterns)):
             patterns[i].print_tree()
 
-    def generate_data(self) -> List[TransactionTree]:
+    def generate_data(self) -> None:
         # Patterns are generated
         pattern_list: List[TreePattern] = []
         fields = [field for field in self.attributes]
@@ -140,7 +140,6 @@ class TransactionGenerator:
                     (self.total_trees - self.threshold) / (pattern_max_length - pattern_min_length))))):
                 tree_indexes.append(random.randint(0, self.total_trees - 1))
             pattern_tree_indexes[pattern] = tree_indexes
-            print("indexes: " + str(len(tree_indexes)) + " pattern: " + str(len(pattern.get_nodes_list()) - 1))
 
         # Trees are generated
         tree_list: List[TransactionTree] = []

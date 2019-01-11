@@ -4,6 +4,7 @@ import random
 from unittest import TestCase
 
 from logic.generator import TransactionGenerator, PatternGenerator
+from models import tree
 from logic.values import ValueGenerator
 
 
@@ -28,3 +29,11 @@ class TestGenerator(TestCase):
             self.assertEqual(len(node.fields), number_of_fields - 1)    # tid excluded
             self.assertTrue("rid" in node.fields)
             self.assertTrue("parent" in node.fields)
+
+    def test_attribute_count(self):
+        number_of_fields = 10
+        generator = TransactionGenerator(100, 10, 5, number_of_fields, 100, 20)
+        roots = generator.generate_data()
+        for root in roots:
+            for record in root.get_nodes_list():
+                self.assertEqual(len(record.fields),number_of_fields)
