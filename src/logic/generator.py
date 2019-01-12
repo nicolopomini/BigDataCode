@@ -112,7 +112,7 @@ class TransactionGenerator:
         for i in range(len(patterns)):
             patterns[i].print_tree()
 
-    def generate_data(self) -> None:
+    def generate_data(self) -> List[TransactionTree]:
         # Patterns are generated
         pattern_list: List[TreePattern] = []
         fields = [field for field in self.attributes]

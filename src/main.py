@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from logic.generator import TransactionGenerator
 import argparse
+import numpy as np
 
 # TODO: test
 # TODO: update README with instructions
@@ -25,18 +26,19 @@ threshold = args.threshold
 show = args.print
 generator = TransactionGenerator(transactions, patterns, avg_pattern_length, number_of_fields, number_of_values, threshold, show)
 trees = generator.generate_data()
+np.random.shuffle(trees)
 fields = []
 for field in [field for field in trees[0].fields]:
-    if field not in ["tid","rid","parent"]:
+    if field not in ["tid", "rid", "parent"]:
         fields.append(field)
 file = open(output_file, "w")
-file.write("transaction_id , record_id , parent_id")
+file.write("transaction_id,record_id,parent_id")
 for field in fields:
-    file.write(" , " + field)
+    file.write("," + field)
 file.write("\n")
 for tree in trees:
     for record in tree.get_nodes_list():
-        file.write(record.fields["tid"] + " , " + record.fields["rid"] + " , " + ("None" if record.fields["parent"] is None else record.fields["parent"]))
+        file.write(record.fields["tid"] + "," + record.fields["rid"] + "," + ("None" if record.fields["parent"] is None else record.fields["parent"]))
         for field in fields:
-            file.write(" , " + record.fields[field])
+            file.write("," + record.fields[field])
         file.write("\n")

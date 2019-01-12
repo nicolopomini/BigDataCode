@@ -4,8 +4,6 @@ import random
 from unittest import TestCase
 
 from logic.generator import TransactionGenerator, PatternGenerator
-from models import tree
-from logic.values import ValueGenerator
 
 
 class TestGenerator(TestCase):
