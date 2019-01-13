@@ -4,8 +4,6 @@ from logic.generator import TransactionGenerator
 import argparse
 import numpy as np
 
-# TODO: test
-# TODO: update README with instructions
 argument_parser = argparse.ArgumentParser(description="A data generator for frequent itemset mining in tree-like sequences of complex objects")
 argument_parser.add_argument("-out", dest="output", type=str, help="Output file name (csv format)", action="store", default="output")
 argument_parser.add_argument("-t", dest="transactions", type=int, help="The number of transaction to generate (int)", action="store", default=20)
