@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from typing import List, Dict
 
-from models.tree import TreePattern, TransactionTree
+from models.tree import PatternTree, TransactionTree
 from logic.values import ValueGenerator
 import random
 import copy
@@ -11,14 +11,14 @@ import numpy as np
 
 class PatternGenerator:
     @staticmethod
-    def generate_pattern(length: int, fields: List[str], values: Dict[str, List[str]], max_fields_for_record: int) -> TreePattern:
+    def generate_pattern(length: int, fields: List[str], values: Dict[str, List[str]], max_fields_for_record: int) -> PatternTree:
         """
         Create a pattern, which is a tree
         :param length: length of the pattern, at least 1. It is the number of edges. Number of nodes: 1 + length
         :param fields: list of the field names
         :param values: list of values: {field_name => list of possible values}
         :param max_fields_for_record: max number of field each record has (excluded the 3 mandatory)
-        :return: the TreePattern, route of the pattern
+        :return: the PatternTree, route of the pattern
         """
         if length < 1:
             raise ValueError("The length must be at least 1. Given %d" % length)
@@ -36,19 +36,19 @@ class PatternGenerator:
                 field_value = values[field_name][random.randint(0, len(values[field_name]) - 1)]
                 fields_for_record[field_name] = field_value
                 fields_name.remove(field_name)
-            node = TreePattern(fields_for_record)
+            node = PatternTree(fields_for_record)
             if node not in nodes:  # quick fix to force nodes to be different either in field or value
                 nodes.append(node)
         # second, build the tree, choosing randomly where to append
         # another random choice is to create an empty node, which represents any value
-        root: TreePattern = nodes[random.randint(0, len(nodes) - 1)]
+        root: PatternTree = nodes[random.randint(0, len(nodes) - 1)]
         included = [root]
         nodes.remove(root)
         for _ in range(length):
             parent = included[random.randint(0, len(included) - 1)]
             # with prob = 20%, create an empty node
             if random.randint(1, 5) == 1:
-                child = TreePattern({})
+                child = PatternTree({})
             else:
                 child = nodes[random.randint(0, len(nodes) - 1)]
                 nodes.remove(child)
@@ -89,7 +89,7 @@ class TransactionGenerator:
         self.print_pattern = print_pattern
         self.attributes = ValueGenerator.generate_values(self.fields - 3, self.values_for_field)    # exclude rid, tid and parent
 
-    def tree_pattern_to_transaction_tree(self, original: TreePattern, parent: TransactionTree = None) -> TransactionTree:
+    def tree_pattern_to_transaction_tree(self, original: PatternTree, parent: TransactionTree = None) -> TransactionTree:
         rid = ValueGenerator.random_string()
         attributes = {"rid": rid}
         # add attributes of the pattern
@@ -106,7 +106,7 @@ class TransactionGenerator:
         return node
 
     @staticmethod
-    def _print_patterns(patterns: List[TreePattern]) -> None:
+    def _print_patterns(patterns: List[PatternTree]) -> None:
         print("GENERATION DETAILS:\n")
         print("Generated patterns: %d\n" % len(patterns))
         for i in range(len(patterns)):
@@ -114,7 +114,7 @@ class TransactionGenerator:
 
     def generate_data(self) -> List[TransactionTree]:
         # Patterns are generated
-        pattern_list: List[TreePattern] = []
+        pattern_list: List[PatternTree] = []
         fields = [field for field in self.attributes]
         pattern_min_length = 1000
         pattern_max_length = 0
@@ -129,7 +129,7 @@ class TransactionGenerator:
         if self.print_pattern:
             TransactionGenerator._print_patterns(pattern_list)
 
-        # change TreePattern nodes into TransactionTree nodes
+        # change PatternTree nodes into TransactionTree nodes
         pattern_for_transaction: List[TransactionTree] = []
         for pattern in pattern_list:
             pattern_for_transaction.append(self.tree_pattern_to_transaction_tree(pattern))

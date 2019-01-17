@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from typing import Dict, List
 
 
-class TreePattern:
+class PatternTree:
     def __init__(self, fields: Dict[str, str]) -> None:
         """
         Create a node that is part of a pattern
@@ -11,12 +11,12 @@ class TreePattern:
         Es: field: 'color', value: 'blue' means that the node contains a field 'color' = 'blue'
         """
         self.fields: Dict[str, str] = fields
-        self.parent: TreePattern = None
-        self.children: List[TreePattern] = []
+        self.parent: PatternTree = None
+        self.children: List[PatternTree] = []
 
     def add_child(self, child) -> None:
-        if not isinstance(child, TreePattern):
-            raise ValueError("Child must be of type 'TreePattern'")
+        if not isinstance(child, PatternTree):
+            raise ValueError("Child must be of type 'PatternTree'")
         self.children.append(child)
         child.parent = self
 
@@ -43,13 +43,13 @@ class TreePattern:
             child.print_tree(tabs + 1)
 
     def get_nodes_list(self) -> []:
-        nodes_list: List[TreePattern] = [self]
+        nodes_list: List[PatternTree] = [self]
         for child in self.children:
             nodes_list.extend(child.get_nodes_list())
         return nodes_list
 
     def __eq__(self, o: object) -> bool:
-        if not isinstance(o, TreePattern):
+        if not isinstance(o, PatternTree):
             return False
         return self.fields == o.fields
 
@@ -75,7 +75,7 @@ class TransactionTree:
             child.print_tree(tabs + 1)
 
     def get_nodes_list(self) -> []:
-        nodes_list: List[TreePattern] = [self]
+        nodes_list: List[PatternTree] = [self]
         for child in self.children:
             nodes_list.extend(child.get_nodes_list())
         return nodes_list

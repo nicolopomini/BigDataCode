@@ -4,7 +4,7 @@ import random
 from unittest import TestCase
 
 from logic.generator import PatternGenerator
-from models.tree import TreePattern
+from models.tree import PatternTree
 from logic.values import ValueGenerator
 
 
@@ -20,7 +20,7 @@ class TestTree(TestCase):
             patterns.append(PatternGenerator.generate_pattern(pattern_lengths[i], [f for f in fields], fields, max_fields))
         # once patterns are generated, check that they are consistent
         for i in range(len(patterns)):
-            pattern: TreePattern = patterns[i]
+            pattern: PatternTree = patterns[i]
             records = pattern.get_nodes_list()
             # check length
             self.assertEqual(len(records), pattern_lengths[i] + 1)
