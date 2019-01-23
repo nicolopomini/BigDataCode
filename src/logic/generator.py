@@ -59,7 +59,7 @@ class PatternGenerator:
 
 class TransactionGenerator:
 
-    def __init__(self, total_trees: int, total_patterns: int, avg_pattern_length: float, fields: int, values_per_field: int, threshold: float, print_pattern: bool = False) -> None:
+    def __init__(self, total_trees: int, total_patterns: int, avg_pattern_length: float, fields: int, values_per_field: int, threshold: int, print_pattern: bool = False) -> None:
         """
         Create a node that is part of a pattern
         :param total_trees: the total number of trees that will be generated
