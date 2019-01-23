@@ -7,7 +7,7 @@ from logic.values import ValueGenerator
 import random
 import copy
 import numpy as np
-
+import math
 
 class PatternGenerator:
     @staticmethod
@@ -59,7 +59,7 @@ class PatternGenerator:
 
 class TransactionGenerator:
 
-    def __init__(self, total_trees: int, total_patterns: int, avg_pattern_length: float, fields: int, values_per_field: int, threshold: int, print_pattern: bool = False) -> None:
+    def __init__(self, total_trees: int, total_patterns: int, avg_pattern_length: float, fields: int, values_per_field: int, threshold: float, print_pattern: bool = False) -> None:
         """
         Create a node that is part of a pattern
         :param total_trees: the total number of trees that will be generated
@@ -110,13 +110,15 @@ class TransactionGenerator:
         print("GENERATION DETAILS:\n")
         print("Generated patterns: %d\n" % len(patterns))
         for i in range(len(patterns)):
+            print("Pattern %d:\n" % (i+1))
             patterns[i].print_tree()
+            print("\n")
 
     def generate_data(self) -> List[TransactionTree]:
         # Patterns are generated
         pattern_list: List[PatternTree] = []
         fields = [field for field in self.attributes]
-        pattern_min_length = 1000
+        pattern_min_length = math.inf
         pattern_max_length = 0
         for _ in range(self.total_patterns):
             pattern_length = int(max(1, np.random.poisson(self.avg_pattern_length)))
@@ -137,7 +139,7 @@ class TransactionGenerator:
         for pattern in pattern_for_transaction:
             tree_indexes = []
             for _ in range(int(self.total_trees - (((len(pattern.get_nodes_list())) - pattern_min_length - 1) * (
-                    (self.total_trees - self.threshold) / (pattern_max_length - pattern_min_length))))):
+                    (self.total_trees - self.threshold) / max(1, pattern_max_length - pattern_min_length))))):
                 tree_indexes.append(random.randint(0, self.total_trees - 1))
             pattern_tree_indexes[pattern] = tree_indexes
 
@@ -147,7 +149,7 @@ class TransactionGenerator:
             chosen_patterns = []
             transaction_id = ValueGenerator.random_string()
             for pattern in pattern_for_transaction:
-                if index in pattern_tree_indexes[pattern]:
+                for _ in range(pattern_tree_indexes[pattern].count(index)):
                     chosen_patterns.append(pattern)
             for pattern in chosen_patterns:
                 for node in pattern.get_nodes_list():
