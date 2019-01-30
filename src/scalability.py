@@ -17,7 +17,7 @@ for t in trees:
     patterns = int(t * pattern_factor)
     avg_length = 10
     times = []
-    for i in range(10):
+    for i in range(5):
         start = time.time()
         generator = TransactionGenerator(t, patterns, avg_length, 10, 100, 5)
         g = generator.generate_data()
