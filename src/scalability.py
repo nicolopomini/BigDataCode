@@ -10,9 +10,17 @@ maxs = []
 avgs = []
 # change color in graph!!
 # use "g" for factor = 0.5, "b" for factor = "0.8"
-trees = [10, 100, 1000]
+trees = [10, 20, 50, 100, 200, 500, 1000]
 pattern_factor = 0.2
 # try with 0.5, 0.8
+if pattern_factor == 0.2:
+    color = "r"
+elif pattern_factor == 0.5:
+    color = "g"
+elif pattern_factor == 0.8:
+    color = "b"
+else:
+    color = "c"
 for t in trees:
     patterns = int(t * pattern_factor)
     avg_length = 10
@@ -33,7 +41,7 @@ plt.title("#patterns = %f * #transactions" % pattern_factor)
 plt.xlabel("Total transactions")
 plt.ylabel("Time [s]")
 plt.grid()
-plt.plot(trees, avgs, 'o-', color="r", label="Response time [s]")
-plt.fill_between(trees, mins, maxs, color="r", alpha=0.1)
-plt.legend()
-plt.savefig("t.pdf")
+plt.plot(trees, avgs, 'o-', color=color, label="Response time [s]")
+plt.fill_between(trees, mins, maxs, color=color, alpha=0.1)
+plt.legend(loc="upper left")
+plt.savefig("t%f.pdf" % pattern_factor)
