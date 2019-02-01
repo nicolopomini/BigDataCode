@@ -95,15 +95,24 @@ class TransactionGenerator:
         # add attributes of the pattern
         for field in original.fields:
             attributes[field] = original.fields[field]
-        for field in self.attributes:
-            if field not in attributes:
-                attributes[field] = self.attributes[field][random.randint(0, len(self.attributes[field]) - 1)]
         node = TransactionTree(attributes, rid)
         node.parent = parent
-        node.fields["parent"] = "" if parent is None else parent.rid
+        node.fields["parent"] = None if parent is None else parent.rid
         for tree in original.children:
             node.add_child(self.tree_pattern_to_transaction_tree(tree, node))
         return node
+
+    def populate_transaction_pattern(self, to_populate: TransactionTree, tid: str):
+        to_populate.fields["tid"] = tid
+        to_populate.rid = ValueGenerator.random_string()
+        to_populate.fields["rid"] = to_populate.rid
+        for field in self.attributes:
+            if field not in to_populate.fields:
+                to_populate.fields[field] = self.attributes[field][random.randint(0, len(self.attributes[field]) - 1)]
+        for child in to_populate.children:
+            child.parent = to_populate.rid
+            child.fields["parent"] = to_populate.rid
+            self.populate_transaction_pattern(child, tid)
 
     @staticmethod
     def _print_patterns(patterns: List[PatternTree]) -> None:
@@ -150,10 +159,9 @@ class TransactionGenerator:
             transaction_id = ValueGenerator.random_string()
             for pattern in pattern_for_transaction:
                 for _ in range(pattern_tree_indexes[pattern].count(index)):
-                    chosen_patterns.append(pattern)
+                    chosen_patterns.append(copy.deepcopy(pattern))
             for pattern in chosen_patterns:
-                for node in pattern.get_nodes_list():
-                    node.fields["tid"] = transaction_id
+                self.populate_transaction_pattern(pattern, transaction_id)
             random_nodes: List[TransactionTree] = []
             # Random nodes generation
             for _ in range(1 + int(self.avg_pattern_length + self.avg_pattern_length * len(chosen_patterns))):
