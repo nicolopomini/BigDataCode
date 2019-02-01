@@ -10,7 +10,7 @@ maxs = []
 avgs = []
 # change color in graph!!
 # use "g" for factor = 0.5, "b" for factor = "0.8"
-trees = [10, 20, 50, 100, 200, 500, 1000]
+trees = [10, 20, 50]
 pattern_factor = 0.2
 # try with 0.5, 0.8
 if pattern_factor == 0.2:
@@ -27,7 +27,7 @@ for t in trees:
     times = []
     for i in range(5):
         start = time.time()
-        generator = TransactionGenerator(t, patterns, avg_length, 10, 100, 5)
+        generator = TransactionGenerator(t, patterns, avg_length, 10, 100)
         g = generator.generate_data()
         finish = time.time()
         times.append(finish - start)

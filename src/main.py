@@ -10,7 +10,6 @@ argument_parser.add_argument("-t", dest="transactions", type=int, help="The numb
 argument_parser.add_argument("-p", dest="patterns", type=int, help="The number of patterns that will be generated and used (int)", action="store", default=4) #4
 argument_parser.add_argument("-avg", dest="average", type=float, help="The average length of a pattern (float)", action="store", default=3) #3
 argument_parser.add_argument("-nf", dest="fields", type=int, help="The total number of fields which every record will have (int)", action="store", default=10) #10
-argument_parser.add_argument("-nv", dest="values", type=int, help="The number of possible values that each field can be generated with (int)", action="store", default=100) #100
 argument_parser.add_argument("-thr", dest="threshold", type=int, help="The minimum number of times that each pattern will appear among all the transactions (int)", action="store", default=4) #4
 argument_parser.add_argument("-pp", dest="print", type=bool, help="Print the generated patterns (boolean)", action="store", default=False) #False
 args = argument_parser.parse_args()
@@ -19,10 +18,9 @@ transactions = args.transactions
 patterns = args.patterns
 avg_pattern_length = args.average
 number_of_fields = args.fields
-number_of_values = args.values
 threshold = args.threshold
 show = args.print
-generator = TransactionGenerator(transactions, patterns, avg_pattern_length, number_of_fields, number_of_values, threshold, show)
+generator = TransactionGenerator(transactions, patterns, avg_pattern_length, number_of_fields, threshold, show)
 trees = generator.generate_data()
 np.random.shuffle(trees)
 fields = []

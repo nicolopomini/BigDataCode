@@ -12,8 +12,5 @@ class TestValueGenerator(TestCase):
 
     def test_generate_values(self):
         fields = 10
-        vals = 10
-        values = ValueGenerator.generate_values(fields, vals)
+        values = ValueGenerator.generate_field_names(fields)
         self.assertEqual(len(values), fields)
-        for f in values:
-            self.assertEqual(len(values[f]), vals)
