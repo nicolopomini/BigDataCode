@@ -83,6 +83,12 @@ class TransactionGenerator:
         self.attributes = ValueGenerator.generate_field_names(self.fields - 3)    # exclude rid, tid and parent
 
     def tree_pattern_to_transaction_tree(self, original: PatternTree, parent: TransactionTree = None) -> TransactionTree:
+        """
+        Translate a PatternTree to a TransactionTree
+        :param original: the PatternTree to be converted
+        :param parent: parent node of original
+        :return: the converted TransactionTree
+        """
         rid = ValueGenerator.random_string()
         attributes = {"rid": rid}
         # add attributes of the pattern
@@ -95,7 +101,12 @@ class TransactionGenerator:
             node.add_child(self.tree_pattern_to_transaction_tree(tree, node))
         return node
 
-    def populate_transaction_pattern(self, to_populate: TransactionTree, tid: str):
+    def populate_transaction_pattern(self, to_populate: TransactionTree, tid: str) -> None:
+        """
+        Add missing fields to a TransactionTree node
+        :param to_populate: the TransactionTree node to be populated
+        :param tid: id of the node
+        """
         to_populate.fields["tid"] = tid
         to_populate.rid = ValueGenerator.random_string()
         to_populate.fields["rid"] = to_populate.rid
@@ -117,6 +128,10 @@ class TransactionGenerator:
             print("\n")
 
     def generate_data(self) -> List[TransactionTree]:
+        """
+        Generate all the transactions
+        :return: list of generated transactions
+        """
         # Patterns are generated
         pattern_list: List[PatternTree] = []
         fields = [field for field in self.attributes]

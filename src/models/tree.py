@@ -4,6 +4,10 @@ from typing import Dict, List
 
 
 class PatternTree:
+    """
+    Class that represents a pattern
+    """
+
     def __init__(self, fields: Dict[str, str]) -> None:
         """
         Create a node that is part of a pattern
@@ -55,6 +59,10 @@ class PatternTree:
 
 
 class TransactionTree:
+    """
+    Class that represents a transaction
+    """
+
     def __init__(self, fields: Dict[str, str], rid: str) -> None:
         self.rid = rid
         self.fields = fields
