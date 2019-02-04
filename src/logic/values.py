@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 import uuid
-from typing import Dict, List
+from typing import List
 
 
 class ValueGenerator:
